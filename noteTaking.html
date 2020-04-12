@@ -101,8 +101,8 @@ Vue.component('Panel',{
 			<i class="fas fa-bars"></i>
 		  </a>
 		</span>
-		<h1 class="text-title">X:/Notes modelo: {{modelo}}</h1>
-		<div v-if="modelo === 7">
+		<h1 class="text-title">X:/Notes modelo: {{nota.modelo}}, id: {{nota.id}} - {{nota.titulo}}</h1>
+		<div v-if="nota.modelo === 7">
 			<ul class="notasm0">
 				<li v-for="grupo in notas">
 					<a href="#" @click="eleccion(grupo.id)">
@@ -115,7 +115,7 @@ Vue.component('Panel',{
 			</ul>
 		</div>
 
-		<div v-else-if="modelo === 0">
+		<div v-else-if="nota.modelo === 0">
 			<div v-for="grupo in notas">
 				<div class='notatitulo'>
 					<a href="#" @click="eleccion(grupo.id)">
@@ -124,7 +124,7 @@ Vue.component('Panel',{
 				</div>
 
 
-				<div class='notadetalle'>
+				<div class='notadetalle' v-html='grupo.nota'>
 					{{ grupo.nota }}
 				</div>
 
@@ -186,7 +186,7 @@ Vue.component('Panel',{
 			notas: null,
 			loading: true,
 			errored: false,
-			modelo: null			
+			nota: []			
 		}
 	},  
 	mounted () {
@@ -199,7 +199,7 @@ Vue.component('Panel',{
   			console.log("Panel - mounted - eDatos")
   			console.log("valor eDatos:"+valor)
   			this.notas = valor.notas;
-  			this.modelo = valor.nota.modelo;
+  			this.nota = valor.nota;
   		});  		
   	}	
 })

@@ -41,7 +41,8 @@ class TipoEnlace {
 	private $tabla;
 	private $datosId;
 	private $datosRuta;
-
+	private $editable = true;						// TODO: deducir o asignar si usr puede editar
+													// ver si controlarlo dese vue		
 	function __construct($id, $tabla, $conn) 
 	{
 		$this->conn = $conn;
@@ -104,7 +105,7 @@ SQL;
 			$ret[] = ["id" => $rs['id'], "titulo" => $rs['titulo']];
 
 			// asignar modelo pagina en caso de que no lo tenga aun	
-			if (is_null($this->datosId['modelo'] && !is_null($rs['modelo']))) {
+			if (is_null($this->datosId['modelo']) && !is_null($rs['modelo'])) {
 				$this->datosId['modelo'] = $rs['modelo'];
 				if ($rs['modelo'] == 2) {
 					$this->datosId['idmnu'] = $rs['id'];
@@ -150,6 +151,9 @@ SQL;
 
 	private function getOpciones() 
 	{
+
+		// TODO: rehacer este codigo es fnns para hacerlo mas legible
+
 		if ($this->datosId['modelo'] != 2) {
 			$sql = <<<SQL
 				SELECT id, titulo, comentarios, nota 
@@ -177,14 +181,19 @@ SQL;
 		$qry = $this->conn->query($sql);
 		// $filas = $qry->num_rows;
 		while($rs = $qry->fetch_assoc()) {
+
 			$opciones[] = ["id"=>$rs['id'], "titulo"=>$rs['titulo'], "nro"=>$rs['nro']];
 
 			if ($this->datosId['modelo'] == 0) {
 
-				$notas[] = ["id"=>$rs['id'], "titulo"=>$rs['titulo'], "nota"=>$rs['nota']];
+				$notas[] = [
+					"id" 		=> $rs['id'], 
+					"titulo" 	=> $rs['titulo'], 
+					"nota"		=> $this->minl2br($rs['nota'])
+				];
 
 			} else {
-				if (!$default == 0) {
+				if (!$default) {
 					$this->datosId['opcDef'] = $rs['id'];
 					$this->datosId['titDef'] = $rs['titulo']; 
 					$default = true;
@@ -192,17 +201,179 @@ SQL;
 			}	
 		}
 
+		//$this->conn->free($qry);			TODO: freresub en mysqli::
+
+
+		###
+		###	Notas sobre el tema elegido
+		###
+
+		$txtbuscar = "";											// TODO: incluir
+
+		if ($this->datosId['modelo'] != 0) {
+
+			if ($txtbuscar != "") {									
+				$sql = <<<SQL
+					SELECT a.*, b.titulo as padre 
+					FROM $this->tabla a, $this->tabla b 
+					WHERE a.id_padre = b.id 
+					AND a.nota LIKE '%$txtbuscar%'
+					ORDER BY b.titulo
+SQL;
+			} else {
+
+				$detalle = $this->datosId['modelo'] == 1 ? true : $this->datosId['detalle'];
+
+				if ($this->datosId['opdef']) {
+					$id = $this->datosId['opcDef'];
+					if ($this->datosId['modelo']==2) {
+						$this->datosId['titulo'] = $this->datosId['titDef'];
+					}	
+				} else {
+					$id = $this->datosId['id'];
+				}	
+
+				$sql  = "SELECT * FROM " . $this->tabla ." WHERE id_padre = ".$id;
+							
+				if ($detalle) {
+					$sql .= " OR id = ".$id;
+					$orden = "id";
+				} else {
+					$orden = "titulo";
+				}
+				
+				$sql .= " ORDER BY ".$orden." ASC";		
+			}	
+
+			$notas = [];
+
+			$qry = $this->conn->query($sql);
+			while($rs = $qry->fetch_assoc()) {
+	
+				if ($txtbuscar == "") {
+		
+					if ($detalle) {
+						$notas[] = [
+							"id" 		=> $rs['id'], 
+							"titulo" 	=> $rs['titulo'], 
+							"nota"		=> $this->minl2br($rs['nota'])
+						];
+					} else {
+						$notas[] = [
+							"id" 		=> $rs['id'], 
+							"titulo" 	=> $rs['titulo'], 
+						];	
+					}
+				} else {
+					$notas[] = [
+						"id" 		=> $rs['id'], 
+						"titulo" 	=> $rs['pacre'] . ' - '.$rs['titulo'], 
+					];	
+				}		
+			}	
+
+			//$this->conn->free($qry);
+		}
+		
 		return compact('opciones','notas');	
 	}
 
-	public function __toString() {
 
+
+	public function __toString() 
+	{
 		//$ret = "Id: ". $this->id . PHP_EOL;
 		$ret = [ "datosId" => $this->datosId, "datosRuta" => $this->datosRuta];
         print "<hr>";
         echo '<pre>';print_r($ret);echo '</pre>';
 		print "<hr>";
 	}
+
+	private function minl2br($txt) {
+
+		// para que no de error Offset not contained in string en strpos($txt, "[kkcode",$ixf);
+		// pasa si txt termina en [kkcode] podria hacerlo con condicional right
+		// pero que es mas simple y directo a�adiendo un spacios
+		$txt .= " ";
+		
+		$out = "";
+		$ixf = 0;
+
+		$ixp = strpos($txt, "[kkcode",0);
+
+		while ($ixp !== false) {	
+
+			$out .= nl2br(substr($txt,$ixf,$ixp-$ixf-1));
+
+			$ixf = strpos($txt, "]",$ixp);
+			$lgj = substr($txt,$ixp+7,$ixf-$ixp-7);
+
+			if ($lgj != "")
+				$out .= "\n".'<pre class="brush:'.$lgj.'">';
+					
+			$ixp = $ixf+1;				
+			$ixf = strpos($txt, "[kkcode]",$ixp);
+			if ($lgj != "") {
+				//$out .= htmlentities(substr($txt,$ixp,$ixf-$ixp));
+				//ojo arriba los kkcode que tuvieran por ejempolo � no salian
+				$out .= substr($txt,$ixp,$ixf-$ixp);
+				$out .= "</pre>\n";
+			} else
+				$out .= "<br>".substr($txt,$ixp,$ixf-$ixp);
+
+			$ixf = $ixf+9;	
+			$ixp = strpos($txt, "[kkcode",$ixf);
+		}
+
+		
+		$out .= nl2br(substr($txt, $ixf));
+
+
+	/*
+		  "/\[off\](.*?)\[\/off\]/is"	  
+	<div onclick="vercapa('????')">Ver Codigo</div><div id='????' style='display:none;'>$1</div>
+
+	*/
+
+		//italic, enfatiz, subrayada
+		$a = array(
+		  "/\[i\](.*?)\[\/i\]/is",
+		  "/\[b\](.*?)\[\/b\]/is",
+		  "/\[u\](.*?)\[\/u\]/is",
+		  "/\[url\](.*?)\[\/url\]/is"
+		);
+		
+		$b = array(
+		  "<i>$1</i>",
+		  "<b>$1</b>",
+		  "<u>$1</u>",
+		  "<a href='$1' target='_blank'>$1</a>"
+		);
+		
+	// 	  "<a class='links' href='$1' target='_blank'>$1</a>"
+		
+		$out = preg_replace($a, $b, $out);
+		
+		$cad = "/\[off\](.*?)\[\/off\]/is";
+		$c = 0;
+		$out = preg_replace_callback($cad,"fnoff",$out);
+		
+		
+		return $out;
+	}
+
+}
+
+function fnoff($repe)
+{
+	global $c;
+	$c++;
+
+	//$ret =  "<div onclick=\"vercapa('a$c')\">Ver/ocultar codigo</div><div id='a$c' style='display:none;'>".$repe[1]."</div>";
+	$ret = "<a href=\"javascript:vercapa('a$c')\">";
+	$ret .=  "<div>Ver/ocultar codigo</div></a><div id='a$c' style='display:none;'>".$repe[1]."</div>";
+			
+	return $ret;
 }
 
 ?>

@@ -22,7 +22,7 @@ $conn=new mysqli(C_HOST,C_USR,C_PWD, C_BD);
 mysqli_query($conn, "SET NAMES utf8");
 
 $tabla = "vs_temas";
-$id = $_GET['id'] ?? 0;
+$id = $_GET['id'] ?? 289;
 
 $enlace = new TipoEnlace($id, $tabla,$conn);
 
@@ -31,6 +31,8 @@ $arr = $enlace->getElementos();
 $datos = [ "datos" => $arr];
 
 $ret = json_encode($datos);
+
+//echo '<pre>';print_r($arr);echo '</pre>';
 
 header('Content-Type: application/json');
 echo utf8_decode($ret);
