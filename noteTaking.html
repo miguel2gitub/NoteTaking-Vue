@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!--
+localhost/intranet/apps/noteTaking/noteTaking.html	
+localhost/intranet/varios/vue/menus/mnu4_04.html
+-->
+<html lang="en">
+<head>
+	<title>Note Taking</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+	<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+	<link rel="stylesheet" href="noteTaking.css">
+
+	<!-- development version, includes helpful console warnings -->
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+	<!-- axios -->
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+</head>
+
+<body>
+	
+<div id="content">
+	<Navbar></Navbar>	
+	<Panel></Panel>
+</div>
+
+
+<script>
+
+
+// para depurar llamada
+axios.interceptors.response.use(response => {
+	console.log('Response:', response.data)
+	return response
+})
+
+
+let globales = {
+	isOpen: true
+}
+
+// <a href="#">{{ grupo.titulo }} - ({{grupo.nro}})</a>
+// <a :href="url(grupo.id)">
+
+Vue.component('Navbar',{
+	template: //html
+	`
+	<div>
+		<div id="menu" class="nav">
+			<a href="#" class="close" @click="closeSlide">
+				<i class="fas fa-times"></i>
+			</a>
+
+  			<div v-for="grupo in grupos">
+				<a href="#" @click="eleccion(grupo.id)">
+     				{{ grupo.titulo }} - ({{grupo.nro}})
+				</a>
+  			</div>
+		</div>
+	</div>
+	`,
+	methods:{
+		closeSlide() {
+			document.getElementById('menu').style.width = '0';
+			document.getElementById('panel').style.marginLeft = '0';
+			globales.isOpen = false;
+		},
+	    eleccion: function(item) {
+	        //console.log(item)
+	        this.$root.$emit('eEleccion',item);
+	    },
+	},
+	data(){
+		return {
+			grupos: null,
+			loading: true,
+			errored: false			
+		}
+	},  
+	mounted () {
+		console.log('navbar - mounted');
+  		this.$root.$on('eDatos',(valor) =>	{
+  			console.log("navbar - mounted - eDatos")
+  			this.grupos = valor.opciones;
+  		});		
+  	}			
+})
+
+Vue.component('Panel',{
+	template: //html
+	`
+	<div id="panel">
+		<span class="slide">
+		  <a href="#" @click="openSlide">
+			<i class="fas fa-bars"></i>
+		  </a>
+		</span>
+		<h1 class="text-title">X:/Notes modelo: {{modelo}}</h1>
+		<div v-if="modelo === 7">
+			<ul class="notasm0">
+				<li v-for="grupo in notas">
+					<a href="#" @click="eleccion(grupo.id)">
+    					{{ grupo.titulo }} <span v-if="grupo.nro > 0">- ({{grupo.nro}})</span> 
+					</a>
+					<div style="position: static; padding: 8px 0px;">
+						<span>{{ grupo.nota }}</span>
+					</div>
+				</li>
+			</ul>
+		</div>
+
+		<div v-else-if="modelo === 0">
+			<div v-for="grupo in notas">
+				<div class='notatitulo'>
+					<a href="#" @click="eleccion(grupo.id)">
+						{{ grupo.titulo }}
+					</a>
+				</div>
+
+
+				<div class='notadetalle'>
+					{{ grupo.nota }}
+				</div>
+
+
+			</div>		
+		</div>		
+
+		<div v-else>
+			<div style="max-width:65%">
+				<ul class="notas">
+					<li v-for="grupo in notas">
+						<a href="#" @click="eleccion(grupo.id)">
+	    					{{ grupo.titulo }} <span v-if="grupo.nro > 0">- ({{grupo.nro}})</span> 
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>					
+	</div>
+	`,
+	methods:{
+		openSlide() {
+			if (!globales.isOpen) {
+				document.getElementById('menu').style.width = '250px';
+				document.getElementById('panel').style.marginLeft = '250px';
+				globales.isOpen = true;
+			} else {
+				this.closeSlide();
+			}	
+		},
+		closeSlide() {
+			document.getElementById('menu').style.width = '0';
+			document.getElementById('panel').style.marginLeft = '0';
+			globales.isOpen = false;
+		},
+	    showNotes: function(item) {
+	        console.log("Panel - ShowNotes - id:"+item)
+	        let objectToSend = {
+                id: item
+            };
+		    axios
+				.get('http://localhost/intranet/apps/noteTaking/noteTaking_api.php', { params: objectToSend })
+				.then(
+					response => (this.notas = response.data.datos.notas))
+				.catch(error => {
+					console.log(error)
+					this.errored = true
+				})
+				.finally(() => this.loading = false)
+	    }
+	},	
+	data(){
+		return {
+			notas: null,
+			loading: true,
+			errored: false,
+			modelo: null			
+		}
+	},  
+	mounted () {
+		console.log("Panel - mounted")
+  		this.$root.$on('eEleccion',(valor) =>	{
+  			console.log("Panel - mounted - EEleccion valor recibido:"+valor)
+  			this.showNotes(valor);
+  		});
+  		this.$root.$on('eDatos',(valor) =>	{
+  			console.log("Panel - mounted - eDatos")
+  			console.log("valor eDatos:"+valor)
+  			this.notas = valor.notas;
+  			this.modelo = valor.nota.modelo;
+  		});  		
+  	}	
+})
+
+//new Vue({							// como anomino o como var ¿cal es la dif?
+//const app = new Vue({
+const app = new Vue({
+	el: '#content',
+    methods: {
+		iniciar: function() {
+		    axios
+				.get('http://localhost/intranet/apps/noteTaking/noteTaking_api.php')
+				.then(
+					response => 
+						{
+							this.datos = response.data.datos;
+							console.log("datoread:"+this.datos)
+							this.$root.$emit('eDatos',this.datos);
+						})
+				.catch(error => {
+					console.log(error)
+					this.errored = true
+				})
+				.finally(() => this.loading = false)
+		}
+	},
+	data(){
+		return {
+		    loading: true,
+		    datos:[]
+		}
+	},
+	mounted: function () {
+    	//this.fetchEvents();
+    	console.log('main - mounted');
+    	this.iniciar();
+	},
+})
+
+</script>
+
+</body>
+</html>
