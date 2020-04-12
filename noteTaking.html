@@ -50,7 +50,7 @@ Vue.component('Navbar',{
 	template: //html
 	`
 	<div>
-		<div id="menu" class="nav">
+		<div id="menu" class="nav abierto">
 			<a href="#" class="close" @click="closeSlide">
 				<i class="fas fa-times"></i>
 			</a>
@@ -65,8 +65,10 @@ Vue.component('Navbar',{
 	`,
 	methods:{
 		closeSlide() {
-			document.getElementById('menu').style.width = '0';
-			document.getElementById('panel').style.marginLeft = '0';
+			document.getElementById('menu').classList.remove("abierto");
+			document.getElementById('panel').classList.remove("abierto");
+			document.getElementById('menu').classList.add("cerrado");
+			document.getElementById('panel').classList.add("cerrado");
 			globales.isOpen = false;
 		},
 	    eleccion: function(item) {
@@ -93,7 +95,7 @@ Vue.component('Navbar',{
 Vue.component('Panel',{
 	template: //html
 	`
-	<div id="panel">
+	<div id="panel" class="abierto">
 		<span class="slide">
 		  <a href="#" @click="openSlide">
 			<i class="fas fa-bars"></i>
@@ -146,18 +148,23 @@ Vue.component('Panel',{
 	methods:{
 		openSlide() {
 			if (!globales.isOpen) {
-				document.getElementById('menu').style.width = '250px';
-				document.getElementById('panel').style.marginLeft = '250px';
+				document.getElementById('menu').classList.remove("cerrado");
+				document.getElementById('panel').classList.remove("cerrado");
+				document.getElementById('menu').classList.add("abierto");
+				document.getElementById('panel').classList.add("abierto");
 				globales.isOpen = true;
 			} else {
 				this.closeSlide();
 			}	
 		},
 		closeSlide() {
-			document.getElementById('menu').style.width = '0';
-			document.getElementById('panel').style.marginLeft = '0';
+			document.getElementById('menu').classList.remove("abierto");
+			document.getElementById('panel').classList.remove("abierto");
+			document.getElementById('menu').classList.add("cerrado");
+			document.getElementById('panel').classList.add("cerrado");
 			globales.isOpen = false;
 		},
+
 	    showNotes: function(item) {
 	        console.log("Panel - ShowNotes - id:"+item)
 	        let objectToSend = {

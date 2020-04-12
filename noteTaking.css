@@ -134,25 +134,24 @@ body {
 	font-size:22px;
 }
 
-/*
-.notacontent {
-    width: 100%;	
-}
-*/
 .notadetalle {
-	width: calc(100% - 280px);
-	/*
-	display: flex;
-  	flex-wrap: wrap;
-
-	width: 75%;
-	margin: 10px 50px 10px 10px;
-    float: left;
-    width: 90%;
-    overflow: auto;
-    margin: auto;
-	max-width: 80%;*/
+	/*width: calc(100% - 280px);*/
 	background:#f7f7ff;
 	border-left:3px solid #eef;
 	padding:1em
+}
+
+#menu.abierto {
+	width:250;
+}
+#menu.cerrado {
+	width:0;
+}
+#panel.abierto {
+	transition: 0.5s;
+	margin-left: 250;
+	width: calc(100% - 280px);
+}
+#panel.cerrado {
+	margin-left: 0;
 }
