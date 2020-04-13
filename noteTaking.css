@@ -50,18 +50,35 @@ body {
 	margin-left: 50px;
 	font-size: 30px
 }
+
 .slide a {
 	color: #000;
-	font-size: 36px;
+	font-size: 36px !important;
+	padding-right: 40px !important;
 }
-.text-title {
-	/*padding: 16px auto 16px auto;
-	margin: 0 auto 16px auto;*/
-	margin-left: 20px;
+
+.titruta {
+	float: left;
+}
+
+.titruta a {
+	padding-left: 20px;
+	font-size: 24px;
+	color: rgb(75,75,75);
+	text-decoration:none;
+}
+
+.titruta a:hover {
+	text-decoration:underline;
+}
+
+.titgrupo {
+	padding: 20px 0px 0px 20px;
 	display: block;
 	font-size: 24px;
 	color: rgb(75,75,75);
 	transition: color 0.25s;
+	clear:both;
 }
 
 #panel {

@@ -272,6 +272,12 @@ SQL;
 				}		
 			}	
 
+			// add, no en original ya que se visualizaba al vuelo, 
+			// t este lo hace la plantilla con datos recibidos
+			if ($this->datosId['modelo'] == 2 && $detalle) {
+				$this->datosId['modelo'] = 0;
+			} 
+
 			//$this->conn->free($qry);
 		}
 		

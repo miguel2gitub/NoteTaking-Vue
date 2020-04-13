@@ -1,8 +1,25 @@
+Este es un note-taking personal que está basado en otro que desarrolle hace bastante tiempo para agrupar guiones y notas de programación.
+
+Es mi primer intento de hacer algo simple con Vue, así que cualquier sugerencia y/o corrección serán bien recibidas.
+
+----------------------------- o -----------------------------
+
 PDTE
+
+- incluir SyntaxHighlighter y markdown/Parsedown
 
 - posible mejora, ahora que abierto cerrado son clases hacerle bind al componenete
 
+- cambiar codigo de la clase y hacer interface con abstrata para comunes
+y clases concretas para cada tipo de modelo de pagina
+
 + cambio abierto/cerrado a clases css para que worwratp detalle nota se correcto (OLD1)
+
+- modelo 3 su opciones no se despligan como menu de opciones en panel
+
+----------------------------- o -----------------------------
+
+- primera version ya funcional
 
 ----------------------------- o -----------------------------
 

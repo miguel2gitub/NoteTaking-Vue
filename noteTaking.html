@@ -24,8 +24,8 @@ localhost/intranet/varios/vue/menus/mnu4_04.html
 <body>
 	
 <div id="content">
-	<Navbar></Navbar>	
-	<Panel></Panel>
+	<Navbar :datosh="datos"></Navbar>	
+	<Panel :datosh="datos"></Panel>
 </div>
 
 
@@ -43,9 +43,6 @@ let globales = {
 	isOpen: true
 }
 
-// <a href="#">{{ grupo.titulo }} - ({{grupo.nro}})</a>
-// <a :href="url(grupo.id)">
-
 Vue.component('Navbar',{
 	template: //html
 	`
@@ -55,7 +52,7 @@ Vue.component('Navbar',{
 				<i class="fas fa-times"></i>
 			</a>
 
-  			<div v-for="grupo in grupos">
+  			<div v-for="grupo in datosh.opciones">
 				<a href="#" @click="eleccion(grupo.id)">
      				{{ grupo.titulo }} - ({{grupo.nro}})
 				</a>
@@ -63,6 +60,10 @@ Vue.component('Navbar',{
 		</div>
 	</div>
 	`,
+	mounted () {
+		console.log('navbar - mounted');
+  	},			
+	props: ['datosh'],
 	methods:{
 		closeSlide() {
 			document.getElementById('menu').classList.remove("abierto");
@@ -76,75 +77,69 @@ Vue.component('Navbar',{
 	        this.$root.$emit('eEleccion',item);
 	    },
 	},
-	data(){
-		return {
-			grupos: null,
-			loading: true,
-			errored: false			
-		}
-	},  
-	mounted () {
-		console.log('navbar - mounted');
-  		this.$root.$on('eDatos',(valor) =>	{
-  			console.log("navbar - mounted - eDatos")
-  			this.grupos = valor.opciones;
-  		});		
-  	}			
 })
+
 
 Vue.component('Panel',{
 	template: //html
 	`
 	<div id="panel" class="abierto">
-		<span class="slide">
-		  <a href="#" @click="openSlide">
-			<i class="fas fa-bars"></i>
-		  </a>
-		</span>
-		<h1 class="text-title">X:/Notes modelo: {{nota.modelo}}, id: {{nota.id}} - {{nota.titulo}}</h1>
-		<div v-if="nota.modelo === 7">
-			<ul class="notasm0">
-				<li v-for="grupo in notas">
-					<a href="#" @click="eleccion(grupo.id)">
-    					{{ grupo.titulo }} <span v-if="grupo.nro > 0">- ({{grupo.nro}})</span> 
-					</a>
-					<div style="position: static; padding: 8px 0px;">
-						<span>{{ grupo.nota }}</span>
-					</div>
-				</li>
-			</ul>
+
+		<div>
+			<span class="titruta slide">
+				<a href="#" @click="openSlide">
+					<i class="fas fa-bars"></i>
+				</a>
+			</span>
+
+			<div v-for="enlace in datosh.ruta" class="titruta">
+					<a href="#" @click="eleccion(enlace.id)">
+						{{ enlace.titulo }}
+					</a> - 
+			</div>
 		</div>
 
-		<div v-else-if="nota.modelo === 0">
-			<div v-for="grupo in notas">
-				<div class='notatitulo'>
-					<a href="#" @click="eleccion(grupo.id)">
-						{{ grupo.titulo }}
-					</a>
-				</div>
-
-
-				<div class='notadetalle' v-html='grupo.nota'>
-					{{ grupo.nota }}
-				</div>
-
-
-			</div>		
-		</div>		
-
-		<div v-else>
-			<div style="max-width:65%">
-				<ul class="notas">
-					<li v-for="grupo in notas">
+		<div v-if="datosh.nota">
+			<h1 v-if="datosh.nota" class="titgrupo">
+				{{datosh.nota.titulo}} - modelo: {{datosh.nota.modelo}}, id: {{datosh.nota.id}} 
+			</h1>
+			<div v-if="datosh.nota.modelo != 2">
+				<div v-for="grupo in datosh.notas">
+					<div class='notatitulo'>
 						<a href="#" @click="eleccion(grupo.id)">
-	    					{{ grupo.titulo }} <span v-if="grupo.nro > 0">- ({{grupo.nro}})</span> 
+							{{ grupo.titulo }}
 						</a>
-					</li>
-				</ul>
+					</div>
+					<div class='notadetalle' v-html='grupo.nota'>
+						{{ grupo.nota }}
+					</div>
+				</div>		
+			</div>		
+
+			<div v-else>
+				<div style="max-width:65%">
+					<ul class="notas">
+						<li v-for="grupo in datosh.notas">
+							<a href="#" @click="eleccion(grupo.id)">
+		    					{{ grupo.titulo }} <span v-if="grupo.nro > 0">- ({{grupo.nro}})</span> 
+							</a>
+						</li>
+					</ul>
+				</div>
 			</div>
-		</div>					
+		</div>
 	</div>
 	`,
+	mounted () {
+		console.log("Panel - mounted")
+  	},	
+	props: ['datosh'],
+	data(){
+		return {
+			loading: true,
+			errored: false,
+		}
+	},  
 	methods:{
 		openSlide() {
 			if (!globales.isOpen) {
@@ -164,67 +159,34 @@ Vue.component('Panel',{
 			document.getElementById('panel').classList.add("cerrado");
 			globales.isOpen = false;
 		},
-
-	    showNotes: function(item) {
-	        console.log("Panel - ShowNotes - id:"+item)
-	        let objectToSend = {
-                id: item
-            };
-		    axios
-				.get('http://localhost/intranet/apps/noteTaking/noteTaking_api.php', { params: objectToSend })
-				.then(
-					response => (this.notas = response.data.datos.notas))
-				.catch(error => {
-					console.log(error)
-					this.errored = true
-				})
-				.finally(() => this.loading = false)
+	    eleccion: function(item) {
+	        //console.log(item)
+	        this.$root.$emit('eEleccion',item);
 	    }
-	},	
-	data(){
-		return {
-			notas: null,
-			loading: true,
-			errored: false,
-			nota: []			
-		}
-	},  
-	mounted () {
-		console.log("Panel - mounted")
-  		this.$root.$on('eEleccion',(valor) =>	{
-  			console.log("Panel - mounted - EEleccion valor recibido:"+valor)
-  			this.showNotes(valor);
-  		});
-  		this.$root.$on('eDatos',(valor) =>	{
-  			console.log("Panel - mounted - eDatos")
-  			console.log("valor eDatos:"+valor)
-  			this.notas = valor.notas;
-  			this.nota = valor.nota;
-  		});  		
-  	}	
+	}	
 })
 
 //new Vue({							// como anomino o como var ¿cal es la dif?
 //const app = new Vue({
-const app = new Vue({
+new Vue({
 	el: '#content',
     methods: {
-		iniciar: function() {
+		getDatos: function(id) {
+	        let objectToSend = {
+                id: id
+            };
 		    axios
-				.get('http://localhost/intranet/apps/noteTaking/noteTaking_api.php')
+				.get('http://localhost/intranet/apps/noteTaking/noteTaking_api.php', { params: objectToSend })
 				.then(
-					response => 
-						{
-							this.datos = response.data.datos;
-							console.log("datoread:"+this.datos)
-							this.$root.$emit('eDatos',this.datos);
-						})
+					response => {
+						this.datos = response.data.datos
+					})
 				.catch(error => {
 					console.log(error)
 					this.errored = true
 				})
 				.finally(() => this.loading = false)
-		}
+	    }				
 	},
 	data(){
 		return {
@@ -235,9 +197,29 @@ const app = new Vue({
 	mounted: function () {
     	//this.fetchEvents();
     	console.log('main - mounted');
-    	this.iniciar();
+    	this.getDatos(0);
+
+  		this.$root.$on('eEleccion',(valor) =>	{
+  			console.log("main - mounted - EEleccion valor recibido:"+valor)
+  			this.getDatos(valor);
+  		});
 	},
 })
+
+// fnn JS generales
+
+function vercapa(id) {
+	if (!document.getElementById) return false;
+	//imgm = "img"+id
+	fila = document.getElementById(id);
+	if (fila.style.display != "none") {
+		fila.style.display = "none"; //ocultar fila
+		//document.getElementById(imgm).src = "http://192.168.167.91/intranet/chollotravel/images/flecha_abajo.png";
+	} else {
+		fila.style.display = ""; //mostrar fila
+		//document.getElementById(imgm).src = "http://192.168.167.91/intranet/chollotravel/images/flecha_drcha.png";
+	}
+}
 
 </script>
 
