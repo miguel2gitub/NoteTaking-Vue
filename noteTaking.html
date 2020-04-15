@@ -2,6 +2,10 @@
 <!--
 localhost/intranet/apps/noteTaking/noteTaking.html	
 localhost/intranet/varios/vue/menus/mnu4_04.html
+
+vue add external js
+https://stackoverflow.com/questions/45047126/how-to-add-external-js-scripts-to-vuejs-components
+
 -->
 <html lang="en">
 <head>
@@ -19,17 +23,41 @@ localhost/intranet/varios/vue/menus/mnu4_04.html
 	<!-- axios -->
 	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
+	<!-- SyntaxHighlighter -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/styles/shCore.min.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/styles/shThemeEmacs.min.css" />
+
+
 </head>
 
 <body>
 	
-<div id="content">
-	<Navbar :datosh="datos"></Navbar>	
-	<Panel :datosh="datos"></Panel>
+<div id="app">
 </div>
 
 
 <script>
+
+// fnn JS generales
+
+function syntaxOn() {
+	SyntaxHighlighter.highlight()
+	console.log("syntaxOn")
+}	
+
+function vercapa(id) {
+	if (!document.getElementById) return false;
+	//imgm = "img"+id
+	fila = document.getElementById(id);
+	if (fila.style.display != "none") {
+		fila.style.display = "none"; //ocultar fila
+		//document.getElementById(imgm).src = "http://192.168.167.91/intranet/chollotravel/images/flecha_abajo.png";
+	} else {
+		fila.style.display = ""; //mostrar fila
+		//document.getElementById(imgm).src = "http://192.168.167.91/intranet/chollotravel/images/flecha_drcha.png";
+	}
+}
+
 
 
 // para depurar llamada
@@ -42,6 +70,20 @@ axios.interceptors.response.use(response => {
 let globales = {
 	isOpen: true
 }
+
+//	<div class='notadetalle' v-html='note'>
+
+Vue.component('Detalle',{
+	template: //html
+	`
+	<div>
+		<div v-html='nota'>
+			{{nota}}
+		</div>		
+	</div>
+	`,
+	props: ['nota']
+})
 
 Vue.component('Navbar',{
 	template: //html
@@ -99,47 +141,38 @@ Vue.component('Panel',{
 			</div>
 		</div>
 
-		<div v-if="datosh.nota">
-			<h1 v-if="datosh.nota" class="titgrupo">
-				{{datosh.nota.titulo}} - modelo: {{datosh.nota.modelo}}, id: {{datosh.nota.id}} 
-			</h1>
-			<div v-if="datosh.nota.modelo != 2">
-				<div v-for="grupo in datosh.notas">
-					<div class='notatitulo'>
-						<a href="#" @click="eleccion(grupo.id)">
-							{{ grupo.titulo }}
-						</a>
-					</div>
-					<div class='notadetalle' v-html='grupo.nota'>
-						{{ grupo.nota }}
-					</div>
-				</div>		
-			</div>		
-
-			<div v-else>
-				<div style="max-width:65%">
-					<ul class="notas">
-						<li v-for="grupo in datosh.notas">
-							<a href="#" @click="eleccion(grupo.id)">
-		    					{{ grupo.titulo }} <span v-if="grupo.nro > 0">- ({{grupo.nro}})</span> 
-							</a>
-						</li>
-					</ul>
+		<h1 class="titgrupo">
+			{{datosh.nota.titulo}} - modelo: {{datosh.nota.modelo}}, id: {{datosh.nota.id}} 
+		</h1>
+		<div v-if="datosh.nota.modelo != 2">
+			<div v-for="grupo in datosh.notas">
+				<div class='notatitulo'>
+					<a href="#" @click="eleccion(grupo.id)">
+						{{ grupo.titulo }}
+					</a>
 				</div>
+				<Detalle :nota="grupo.nota"></Detalle>	
+			</div>		
+		</div>		
+
+		<div v-else>
+			<div style="max-width:65%">
+				<ul class="notas">
+					<li v-for="grupo in datosh.notas">
+						<a href="#" @click="eleccion(grupo.id)">
+	    					{{ grupo.titulo }} <span v-if="grupo.nro > 0">- ({{grupo.nro}})</span> 
+						</a>
+					</li>
+				</ul>
 			</div>
 		</div>
+
 	</div>
 	`,
 	mounted () {
 		console.log("Panel - mounted")
   	},	
 	props: ['datosh'],
-	data(){
-		return {
-			loading: true,
-			errored: false,
-		}
-	},  
 	methods:{
 		openSlide() {
 			if (!globales.isOpen) {
@@ -167,9 +200,16 @@ Vue.component('Panel',{
 })
 
 //new Vue({							// como anomino o como var ¿cal es la dif?
-//const app = new Vue({
-new Vue({
-	el: '#content',
+	// 		    datos:{nota:{modelo: 0}}
+const app = new Vue({
+	el: '#app',
+	template: //html
+	`
+	<div>
+		<Navbar :datosh="datos"></Navbar>
+		<Panel :datosh="datos" v-if="isMounted"></Panel>	
+	</div>
+	`,		
     methods: {
 		getDatos: function(id) {
 	        let objectToSend = {
@@ -185,13 +225,20 @@ new Vue({
 					console.log(error)
 					this.errored = true
 				})
-				.finally(() => this.loading = false)
+				.finally(() => {
+    				console.log('2 - main - getDatos finish');		
+					this.loading = false
+					this.isMounted = true
+    				syntaxOn();
+				})
 	    }				
 	},
 	data(){
 		return {
 		    loading: true,
-		    datos:[]
+		    errored: false,		    
+		    isMounted: false,		    
+		    datos: {}
 		}
 	},
 	mounted: function () {
@@ -206,22 +253,16 @@ new Vue({
 	},
 })
 
-// fnn JS generales
+// datos:{nota:{modelo: 0}}
 
-function vercapa(id) {
-	if (!document.getElementById) return false;
-	//imgm = "img"+id
-	fila = document.getElementById(id);
-	if (fila.style.display != "none") {
-		fila.style.display = "none"; //ocultar fila
-		//document.getElementById(imgm).src = "http://192.168.167.91/intranet/chollotravel/images/flecha_abajo.png";
-	} else {
-		fila.style.display = ""; //mostrar fila
-		//document.getElementById(imgm).src = "http://192.168.167.91/intranet/chollotravel/images/flecha_drcha.png";
-	}
-}
 
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shCore.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shBrushJava.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shBrushPhp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shBrushJScript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shBrushXml.min.js"></script>
 
 </body>
 </html>

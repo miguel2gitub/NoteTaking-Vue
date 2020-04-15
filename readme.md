@@ -6,12 +6,18 @@ Es mi primer intento de hacer algo simple con Vue, así que cualquier sugerencia
 
 PDTE
 
-- incluir SyntaxHighlighter y markdown/Parsedown
+- incluir edicion (solo localhost)
+
+- incluir for de busqueda
+
+- sistema de tagging
 
 - posible mejora, ahora que abierto cerrado son clases hacerle bind al componenete
 
 - cambiar codigo de la clase y hacer interface con abstrata para comunes
 y clases concretas para cada tipo de modelo de pagina
+
++ incluir SyntaxHighlighter y markdown/Parsedown
 
 + cambio abierto/cerrado a clases css para que worwratp detalle nota se correcto (OLD1)
 

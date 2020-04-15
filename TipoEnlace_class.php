@@ -35,6 +35,10 @@ https://es.vuejs.org/v2/cookbook/debugging-in-vscode.html
 https://es.vuejs.org/v2/guide/computed.html
 */
 
+	require_once ('c:/www/lib/markdown/Parsedown.php');
+	require_once ('c:/www/lib/markdown//ParsedownExtra.php');
+
+
 class TipoEnlace {
 
 	private $conn;
@@ -295,7 +299,7 @@ SQL;
 		print "<hr>";
 	}
 
-	private function minl2br($txt) {
+	private function minl2brOLD($txt) {
 
 		// para que no de error Offset not contained in string en strpos($txt, "[kkcode",$ixf);
 		// pasa si txt termina en [kkcode] podria hacerlo con condicional right
@@ -367,6 +371,55 @@ SQL;
 		
 		return $out;
 	}
+
+	private function minl2br($txt) {
+
+		$txt = str_replace('[kkcode]','```',$txt);
+
+		//italic, enfatiz, subrayada
+		$a = array(
+		  "/\[kkcode(.*?)\]/is",	
+		  "/\[i\](.*?)\[\/i\]/is",
+		  "/\[b\](.*?)\[\/b\]/is",
+		  "/\[u\](.*?)\[\/u\]/is",
+		  "/\[url\](.*?)\[\/url\]/is"
+		);
+		
+		$b = array(
+		  "```$1",	
+		  "<i>$1</i>",
+		  "<b>$1</b>",
+		  "<u>$1</u>",
+		  "<a href='$1' target='_blank'>$1</a>"
+		);
+		
+	// 	  "<a class='links' href='$1' target='_blank'>$1</a>"
+		
+		$out = preg_replace($a, $b, $txt);
+		
+		$cad = "/\[off\](.*?)\[\/off\]/is";
+		$c = 0;
+		$out = preg_replace_callback($cad,"fnoff",$out);
+
+
+		$out = $this->markdown($out);				
+		
+		
+		return $out;
+	}
+
+
+	private function markdown($txt) {
+
+	//	$ret = ParsedownExtra::instance()->text($txt[1]);
+
+		$kk = new ParsedownExtra();
+		$kk->setBreaksEnabled(true);
+		$kk->setSyntaxHighlighter(true);
+		$ret = $kk->text($txt);
+			
+		return $ret;
+	}	
 
 }
 
